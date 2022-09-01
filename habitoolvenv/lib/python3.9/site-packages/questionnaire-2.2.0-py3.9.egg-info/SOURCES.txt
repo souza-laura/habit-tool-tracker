@@ -1,0 +1,12 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.cfg
+setup.py
+questionnaire/__init__.py
+questionnaire/prompters.py
+questionnaire.egg-info/PKG-INFO
+questionnaire.egg-info/SOURCES.txt
+questionnaire.egg-info/dependency_links.txt
+questionnaire.egg-info/requires.txt
+questionnaire.egg-info/top_level.txt
