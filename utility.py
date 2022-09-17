@@ -23,6 +23,17 @@ def showhabitstable(habits: list):
         # TODO: message that shows that user has no habits
 
 
+def showpredefinedhabits(habits: list):
+    table = Table(title="Predefined Habits", style="bold")
+    table.add_column("Habit Name")
+    table.add_column("Habit Description")
+    table.add_column("Periodicity")
+    for hab in habits:
+        table.add_row(hab[0], hab[1], hab[2])
+    console = Console()
+    console.print(table)
+
+
 def active(status: int):
     if 0 == status:
         return "🔴"

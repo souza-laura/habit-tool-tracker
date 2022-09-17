@@ -54,6 +54,23 @@ def activate_deactivatehabit(connection, habitid):
             cur.execute("UPDATE habit SET active=(?) WHERE habit_id = (?)", (active, habitid))
 
 
+def modifyhabit(connection, habitid, columntoupdate, newvalue):
+    query = f"UPDATE habit SET {columntoupdate}=" + f"'{newvalue}'" + f" WHERE habit_id = {habitid}"
+    if habitexists(connection, habitid):
+        with connection:
+            cur = connection.cursor()
+            cur.execute(query)
+            query = f"SELECT {columntoupdate} from habit WHERE habit_id = {habitid}"
+            modifiedvalue = cur.execute(query).fetchone()[0]
+            if modifiedvalue.__eq__(f"{newvalue}"):
+                print(query, newvalue)
+                return 1
+            else:
+                return -1
+    else:
+        return -1
+
+
 def _getactivationstatus(connection, habitid):
     if habitexists(connection, habitid):
         cur = connection.cursor()
@@ -88,12 +105,29 @@ def markhabitascompleted(connection, habitid):
         cur.execute("INSERT INTO progress (habit_id, status) VALUES (?,?)", (habitid, 1))
 
 
-def addpredefinedhabits(connection, userid, predefined: list):
+def checkifalreadycompleted(connection, habitid, date):
     with connection:
         cur = connection.cursor()
-        for predef in predefined:
-            cur.execute("INSERT INTO habit(user_id, habit_name, habit_description, periodicity, active, type)"
-                        "VALUES (?,?,?,?,?,?)", (userid, predef[0], predef[1], predef[2], 1, predef[3]))
+        check = cur.execute("SELECT COUNT(*) FROM progress WHERE habit_id=(?) AND progress_date=(?) ", (habitid, date)).fetchone()[0]
+        if check:
+            return check
+        else:
+            return -1
+
+
+
+def getpredefinedhabits(connection):
+    with connection:
+        cur = connection.cursor()
+        habits = cur.execute("SELECT habit_name, habit_description, periodicity, type FROM predefined_habit").fetchall()
+        return habits
+
+
+def addpredefinedhabit(connection, userid, predefined: list):
+    with connection:
+        cur = connection.cursor()
+        cur.execute("INSERT INTO habit(user_id, habit_name, habit_description, periodicity, active, type)"
+                    "VALUES (?,?,?,?,?,?)", (userid, predefined[0], predefined[1], predefined[2], 1, predefined[3]))
 
 
 class Habit:

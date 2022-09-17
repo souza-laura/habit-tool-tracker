@@ -1,14 +1,10 @@
-import menu
-import utility
-
-menuconnection = utility.getdbconnection('test.db')
+from menu import menu
 
 
 def main():
-    userid = menu.loginandregistration()
-
-   # habitmenu(userid)
+    menu()
 
 
 if __name__ == "__main__":
     main()
+
