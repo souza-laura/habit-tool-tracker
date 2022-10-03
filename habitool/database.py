@@ -8,7 +8,7 @@ def connect(database=None):
     return connection
 
 
-def initializedatabase(database):
+def initialize_database(database):
     connection = connect(database)
     cur = connection.cursor()
     exists = cur.execute("""SELECT count(*)

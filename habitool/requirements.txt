@@ -1,3 +1,5 @@
 bcrypt==4.0.0
 questionary==1.10.0
 rich==12.5.1
+numpy~=1.23.3
+Faker~=15.0.0
