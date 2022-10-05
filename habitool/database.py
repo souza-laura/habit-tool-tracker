@@ -18,7 +18,7 @@ def initialize_database(database):
     # TODO: implement basic logging messages
     if not exists:
         with connection:
-            with open('dbinitialization.txt') as initializer:
+            with open('../dbinitialization.txt') as initializer:
                 for command in initializer:
                     cur.execute(command)
             initializer.close()

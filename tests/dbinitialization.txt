@@ -1,9 +1,0 @@
-CREATE TABLE IF NOT EXISTS user(user_id INTEGER PRIMARY KEY AUTOINCREMENT, first_name TEXT, last_name TEXT, username TEXT NOT NULL, password TEXT, UNIQUE(user_id, username));
-CREATE TABLE IF NOT EXISTS habit(habit_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, habit_name TEXT, habit_description TEXT, creation_date DATE DEFAULT CURRENT_DATE , periodicity TEXT, active INTEGER, type TEXT, FOREIGN KEY (user_id) REFERENCES user (user_id), UNIQUE(habit_id, habit_name, habit_description));
-CREATE TABLE IF NOT EXISTS predefined_habit(habit_name TEXT, habit_description TEXT, creation_date DATE DEFAULT CURRENT_DATE , periodicity TEXT, active INTEGER, type TEXT);
-CREATE TABLE IF NOT EXISTS progress(habit_id INTEGER, progress_date DATE DEFAULT CURRENT_DATE, status INTEGER, FOREIGN KEY (habit_id) REFERENCES habit (habit_id));
-INSERT INTO predefined_habit (habit_name, habit_description, periodicity, active, type) VALUES ("Go for a walk", "Go for a walk for at least 15 minutes everyday", "DAILY", "0", "PREDEFINED")
-INSERT INTO predefined_habit (habit_name, habit_description, periodicity, active, type) VALUES ("Read a book", "Read a book every month", "MONTHLY", "0", "PREDEFINED")
-INSERT INTO predefined_habit (habit_name, habit_description, periodicity, active, type) VALUES ("Write a journal", "Write on a journal how your week was!", "WEEKLY", "0", "PREDEFINED")
-INSERT INTO predefined_habit (habit_name, habit_description, periodicity, active, type) VALUES ("Prepare meal plan", "Prepare the meal plan for the week", "WEEKLY", "0", "PREDEFINED")
-INSERT INTO predefined_habit (habit_name, habit_description, periodicity, active, type) VALUES ("Get some off-screen time", "Lock your tech devices for at least 1 hour every day", "DAILY", "0", "PREDEFINED")

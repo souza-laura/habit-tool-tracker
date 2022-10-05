@@ -1,9 +1,14 @@
-from rich.table import Table
-from rich.console import Console
-import re
-from cfonts import render
-from database import initialize_database
 import datetime
+import re
+import emoji
+
+from cfonts import render
+from rich.console import Console
+from rich.table import Table
+
+from habitool.database import initialize_database
+
+party_popper = emoji.emojize(":party_popper:")
 
 
 def show_habits_table(habits: list):
@@ -68,7 +73,7 @@ def show_dates_streak(habits):
         table.add_row(date)
     total = Table()
     total.add_column("Total Streak", justify="center", style="orange3")
-    total.add_row("🎉 " + str(len(habits)) + " 🎉")
+    total.add_row(party_popper + " " + str(len(habits)) + " " + party_popper)
     console = Console()
     console.print(table, total)
 
@@ -77,9 +82,9 @@ def active(status: int):
     """ Utility function for showing status icon in table """
 
     if 0 == status:
-        return "🔴"
+        return emoji.emojize(":red_circle:")
     else:
-        return "🟢"
+        return emoji.emojize(":green_circle:")
 
 
 def password_validator(password):

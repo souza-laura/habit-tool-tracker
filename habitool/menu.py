@@ -1,26 +1,34 @@
 from datetime import datetime
 
+import emoji
+import numpy as np
 import questionary
 from rich.console import Console
 from rich.text import Text
-import numpy as np
 
 import habit
 import user
 import utility
 
+db_name = 'test.db'
 # DB Initialization
-menuconnection = utility.get_connection('test.db')
+menu_connection = utility.get_connection(db_name)
 console = Console()
 
-# Different QMarks for Questionary questions
-qmark = "⭐️"
-wrongpw = "☠️"
-habitcreation = "🌱"
-habitdeletion = "🔥"
-habitmodification = "🔧️"
-markascompl = "📗"
-programexit = "📤"
+# EMOJIS
+qmark = emoji.emojize(" :star: ")
+x_emoji = emoji.emojize(" :x: ")
+seedling = emoji.emojize(" :seedling: ")
+fire = emoji.emojize(" :fire: ")
+wrench = emoji.emojize(" :wrench: ")
+green_book = emoji.emojize(" :green_book: ")
+outbox_tray = emoji.emojize(" :outbox_tray: ")
+inbox_tray = emoji.emojize(" :inbox_tray: ")
+confused_emoji = emoji.emojize(" :confused: ")
+butterfly = emoji.emojize(" :butterfly: ")
+party_popper = emoji.emojize(" :party_popper: ")
+balloon = emoji.emojize(" :balloon: ")
+hammer_and_wrench = emoji.emojize(" :hammer_and_wrench: ")
 
 # Lists that may be used more than once in the program
 periodicitychoices = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]
@@ -32,8 +40,8 @@ def menu():
         This is the first access to the program, from here we can login or register."""
 
     utility.render_title()
-    welcomemessage = "Welcome to Habitool! Is it your first time here?"
-    res = questionary.confirm(welcomemessage, qmark=qmark).ask()
+    welcome_message = "Welcome to Habitool! Is it your first time here?"
+    res = questionary.confirm(welcome_message, qmark=qmark).ask()
     if True.__eq__(res):
         registration_form()
     elif False.__eq__(res):
@@ -43,8 +51,8 @@ def menu():
 def registration_form():
     """ Registration form that, as the name suggests, allows to register a new profile. We can create an account in
         order to be able to access later all program's functionalities."""
-    registrationmessage = "Let's proceed with registration.\nWhat's your first name?"
-    firstname = questionary.text(registrationmessage,
+    registration_message = "Let's proceed with registration.\nWhat's your first name?"
+    firstname = questionary.text(registration_message,
                                  validate=utility.text_validator,
                                  qmark=qmark).ask()
     lastname = questionary.text("What's your last name?",
@@ -53,38 +61,39 @@ def registration_form():
     username = questionary.text("Choose a username (The username will be used for the login):",
                                 validate=utility.text_validator,
                                 qmark=qmark).ask()
-    exists = user.check_existing_username(menuconnection, username)
+    exists = user.check_existing_username(menu_connection, username)
     while exists:
         username = questionary.text("This username is already taken. Choose another one:",
                                     validate=utility.text_validator,
                                     qmark=qmark).ask()
-        exists = user.check_existing_username(menuconnection, username)
+        exists = user.check_existing_username(menu_connection, username)
     password = questionary.password("Choose the password: ",
                                     validate=utility.password_validator,
                                     qmark=qmark).ask()
     password.encode('utf-8')
-    userid = user.register(menuconnection, firstname, lastname, username.lower(), password)
-    if not userid.__eq__(-1):
+    user_id = user.register(menu_connection, firstname, lastname, username.lower(), password)
+    if not user_id.__eq__(-1):
         text = Text("\n\nWelcome to Habitool, ")
         text.stylize("bold", 0)
         firstname = Text(firstname.lower().capitalize() + "!")
         firstname.stylize("bold orange3")
         console.print(text + firstname)
-        hashabit = habit.has_habits(menuconnection, userid)
-        habit_menu(userid, hashabit)
+        hashabit = habit.has_habits(menu_connection, user_id)
+        habit_menu(user_id, hashabit)
     else:
-        console.print("\n\nSorry, something went wrong with your registration.😟\nTry again.\n\n", style="bold red3")
+        console.print(f"\n\nSorry, something went wrong with your registration.{confused_emoji}\nTry again.\n\n",
+                      style="bold red3")
         menu()
 
 
 def login_form():
     """ Login form. This is the part of the menu that allows us to login, after registration. """
-    loginmessage = Text("\nLogin 📥\n")
-    loginmessage.stylize("bold light_slate_blue")
-    console.print(loginmessage)
-    wrongpasswordcounter = 0
+    login_message = Text(f"\nLogin {inbox_tray}\n")
+    login_message.stylize("bold light_slate_blue")
+    console.print(login_message)
+    wrong_password_counter = 0
     username = questionary.text("Username: ", qmark=qmark).ask()
-    exists = user.check_existing_username(menuconnection, username.lower())
+    exists = user.check_existing_username(menu_connection, username.lower())
     while not exists:
         proceed = questionary.confirm("There's no such username. Do you want to proceed with registration?",
                                       qmark=qmark).ask()
@@ -92,47 +101,48 @@ def login_form():
             registration_form()
             break
         username = questionary.text("Username: ", qmark=qmark).ask()
-        exists = user.check_existing_username(menuconnection, username.lower())
+        exists = user.check_existing_username(menu_connection, username.lower())
     password = questionary.password("Password: ", qmark=qmark).ask()
-    check = user.login(menuconnection, username.lower(), password)
+    check = user.login(menu_connection, username.lower(), password)
     while check.__eq__(-1):
-        wrongpasswordcounter += 1
-        password = questionary.password("Wrong password. Try again:  ", qmark=wrongpw).ask()
-        check = user.login(menuconnection, username, password)
+        wrong_password_counter += 1
+        password = questionary.password("Wrong password. Try again:  ", qmark=x_emoji).ask()
+        check = user.login(menu_connection, username, password)
         if not check.__eq__(-1):
             break
-        if wrongpasswordcounter.__eq__(3):
+        if wrong_password_counter.__eq__(3):
+            # TODO: wrong password more than three times
             pass
     text = Text("\nWelcome back to Habitool, ")
     text.stylize("bold", 0)
-    firstname = Text(user.get_firstname(menuconnection, check).lower().capitalize() + "!\n")
+    firstname = Text(user.get_firstname(menu_connection, check).lower().capitalize() + "!\n")
     firstname.stylize("bold orange3", 0)
     console.print(text + firstname)
-    hashabit = habit.has_habits(menuconnection, check)
-    habit_menu(check, hashabit)
+    has_habit = habit.has_habits(menu_connection, check)
+    habit_menu(check, has_habit)
 
 
-def first_login(userid):
+def first_login(user_id):
     """ This is the function that is called at the user'd first login. Here we can choose whether
         we want predefined habits or not."""
-    res = questionary.confirm("You don't have any habit yet. Do you want to chose some predefined habits?",
-                              qmark=qmark).ask()
-    if True.__eq__(res):
-        choose_predefined_habits(userid)
+    response = questionary.confirm("You don't have any habit yet. Do you want to chose some predefined habits?",
+                                   qmark=qmark).ask()
+    if True.__eq__(response):
+        choose_predefined_habits(user_id)
     else:
-        habit_menu(userid, 0)
+        habit_menu(user_id, 0)
 
 
-def habit_menu(userid, hashabit=0):
+def habit_menu(user_id, has_habit=0):
     """ Function that allows to access the program main functionalities."""
-    habitmenuchoices = ["Create a new habit",
-                        "Modify an existing habit",
-                        "Mark habit as completed",
-                        "Activate/Deactivate habit",
-                        "Delete a habit",
-                        "Habits Analysis",
-                        "Account Settings",
-                        "Exit Habitool"]
+    habit_menu_choices = ["Create a new habit",
+                          "Modify an existing habit",
+                          "Mark habit as completed",
+                          "Activate/Deactivate habit",
+                          "Delete a habit",
+                          "Habits Analysis",
+                          "Account Settings",
+                          "Exit Habitool"]
     options = {"Create a new habit": create_new_habit,
                "Modify an existing habit": modify_habit,
                "Mark habit as completed": mark_as_completed,
@@ -141,93 +151,93 @@ def habit_menu(userid, hashabit=0):
                "Habits Analysis": habits_analysis,
                "Account Settings": account_settings,
                "Exit Habitool": exit_program}
-    if hashabit.__eq__(-1):
-        first_login(userid)
+    if has_habit.__eq__(-1):
+        first_login(user_id)
     else:
-        answer = questionary.select("What would you like to do?", choices=habitmenuchoices, qmark=qmark).ask()
-        options[answer](userid)
+        answer = questionary.select("What would you like to do?", choices=habit_menu_choices, qmark=qmark).ask()
+        options[answer](user_id)
 
 
-def create_new_habit(userid):
+def create_new_habit(user_id):
     """ Function created in order to allow the creation a new habits """
-    text = Text("\n\nLet's create a new habit! 🦋\n\n")
+    text = Text(f"\nLet's create a new habit!{butterfly}\n")
     text.stylize("bold sky_blue1")
     console.print(text)
-    name = questionary.text("Choose a name for your new habit: ", qmark=habitcreation).ask()
-    description = questionary.text("Choose a description for your new habit: ", qmark=habitcreation).ask()
+    name = questionary.text("Choose a name for your new habit: ", qmark=seedling).ask()
+    description = questionary.text("Choose a description for your new habit: ", qmark=seedling).ask()
     period = questionary.select("Choose a periodicity for your new habit: ",
-                                choices=periodicitychoices, qmark=habitcreation).ask()
-    active = questionary.confirm("Do you want to activate the habit?", qmark=habitcreation).ask()
+                                choices=periodicitychoices, qmark=seedling).ask()
+    active = questionary.confirm("Do you want to activate the habit?", qmark=seedling).ask()
     if True.__eq__(active):
         active = 1
     else:
         active = 0
-    habitid = habit.add_new_habit(menuconnection, userid, name, description, period, active)
-    exists = habit.habit_exists(menuconnection, habitid)
+    habit_id = habit.add_new_habit(menu_connection, user_id, name, description, period, active)
+    exists = habit.habit_exists(menu_connection, habit_id)
     if exists.__eq__(1):
-        text = Text("\nNew habit successfully created!🦋\n")
+        text = Text(f"\nNew habit successfully created!{butterfly}\n")
         text.stylize("bold sky_blue1")
         console.print(text)
-        habit_menu(userid)
+        habit_menu(user_id)
     else:
-        text = Text("\nSorry something went wrong. Try again.😟\n")
+        text = Text(f"\nSorry something went wrong. Try again.{confused_emoji}\n")
         text.stylize("bold red3")
         console.print(text)
-        habit_menu(userid, 0)
+        habit_menu(user_id, 0)
 
 
-def delete_habit(userid):
+def delete_habit(user_id):
     """ Function created in order to allow the deletion of habits """
-    text = Text("\nWhich habit do you want to delete? 🔥\n")
+    text = Text(f"\nWhich habit do you want to delete?{fire}\n")
     text.stylize("bold deep_pink2")
     console.print(text)
-    cont = 1
-    habits = habit.get_user_habits(menuconnection, userid)
+    continue_flow = 1
+    habits = habit.get_user_habits(menu_connection, user_id)
     if type(habits) == list:
         utility.show_habits_table(list(habits))
         choices = []
         for hab in habits:
             choices.append(f"{hab[0]} - {hab[1]} - {hab[4]}")
-        while cont:
-            answer = questionary.select("Choose the habit to delete:", qmark=habitdeletion, choices=choices).ask()
+        while continue_flow:
+            answer = questionary.select("Choose the habit to delete:", qmark=fire, choices=choices).ask()
             ans = answer.split(" - ")
-            confirmation = questionary.confirm("Are you sure you want to delete the habit?", qmark=habitdeletion).ask()
+            confirmation = questionary.confirm("Are you sure you want to delete the habit?", qmark=fire).ask()
             if True.__eq__(confirmation):
-                deleted = habit.delete_habit(menuconnection, ans[0])
+                deleted = habit.delete_habit(menu_connection, ans[0])
                 if deleted:
-                    text = Text("\nThe habit was correctly deleted.🔥\n")
+                    text = Text(f"\nThe habit was correctly deleted.{fire}\n")
                     text.stylize("bold deep_pink2")
                     console.print(text)
-                    proceed = questionary.confirm("Do you want to delete another habit?", qmark=habitdeletion).ask()
+                    proceed = questionary.confirm("Do you want to delete another habit?", qmark=fire).ask()
                     if True.__eq__(proceed):
-                        cont = 1
+                        continue_flow = 1
                     else:
-                        cont = 0
+                        continue_flow = 0
                 else:
-                    text = Text("\nSomething went wrong with habit deletion. Try again.😟\n")
+                    text = Text(f"\nSomething went wrong with habit deletion. Try again.{confused_emoji}\n")
                     text.stylize("bold red3")
                     console.print(text)
-    habit_menu(userid)
+    habit_menu(user_id)
 
 
-def modify_habit(userid):
+def modify_habit(user_id):
     """ Function created in order to allow the modification of habits. """
     result = 0
-    text = Text("\nWhich habit do you want to modify?🔧\n")
+    text = Text(f"\nWhich habit do you want to modify?{wrench}\n")
     text.stylize("bold light_coral")
     console.print(text)
-    cont = 1
-    habits = habit.get_user_habits(menuconnection, userid)
+    continue_flow = 1
+    habits = habit.get_user_habits(menu_connection, user_id)
     if type(habits) == list:
         utility.show_habits_table(list(habits))
         choices = []
         for hab in habits:
             choices.append(f"{hab[0]} - {hab[1]} - {hab[4]}")
-        while cont:
-            answer = questionary.select("Choose the habit to modify:", qmark=habitmodification, choices=choices).ask()
+        while continue_flow:
+            answer = questionary.select("Choose the habit to modify:", qmark=wrench, choices=choices).ask()
             ans = answer.split(" - ")
             choice = questionary.select("What do you want to modify?", choices=modificationchoices,
-                                        qmark=habitmodification).ask()
+                                        qmark=wrench).ask()
             if "Name".__eq__(choice):
                 result = change_habit_name(ans[0])
             if "Description".__eq__(choice):
@@ -235,106 +245,106 @@ def modify_habit(userid):
             if "Periodicity".__eq__(choice):
                 result = change_habit_periodicity(ans[0])
             if result.__eq__(1):
-                text = Text("\nThe habit was correctly modified. 🔧\n")
+                text = Text(f"\nThe habit was correctly modified.{wrench}\n")
                 text.stylize("bold light_coral")
                 console.print(text)
-                proceed = questionary.confirm("Do you want to modify another habit?", qmark=habitmodification).ask()
+                proceed = questionary.confirm("Do you want to modify another habit?", qmark=wrench).ask()
                 if True.__eq__(proceed):
-                    cont = 1
+                    continue_flow = 1
                 else:
-                    cont = 0
+                    continue_flow = 0
             else:
-                text = Text("\nSomething went wrong with habit deletion. Try again.😟\n")
+                text = Text(f"\nSomething went wrong with habit deletion. Try again.{confused_emoji}\n")
                 text.stylize("bold red3")
                 console.print(text)
-    habit_menu(userid)
+    habit_menu(user_id)
 
 
-def choose_predefined_habits(userid):
+def choose_predefined_habits(user_id):
     """ Function created in order to allow the choice if predefined habits (available only at the first login
         or when user do not have any habits)"""
-    predef = habit.get_predefined_habits(menuconnection)
+    predef = habit.get_predefined_habits(menu_connection)
     utility.show_predefined_habits(predef)
     choices = ["I don't want any predefined habit", "1", "2", "3", "4", "5", "All of the above"]
     answer = questionary.checkbox("Select habits: ", choices=choices, qmark=qmark).ask()
     # TODO: find better and more dynamic way to add predefined habits bases on user choice
     if "All of the above" in answer:
         for p in predef:
-            habit.add_predefined_habit(menuconnection, userid, p)
+            habit.add_predefined_habit(menu_connection, user_id, p)
         answer = []
     if "I don't want any predefined habit" in answer or not answer:
-        habit_menu(userid)
+        habit_menu(user_id)
     if "1" in answer:
-        habit.add_predefined_habit(menuconnection, userid, predef[0])
+        habit.add_predefined_habit(menu_connection, user_id, predef[0])
     if "2" in answer:
-        habit.add_predefined_habit(menuconnection, userid, predef[1])
+        habit.add_predefined_habit(menu_connection, user_id, predef[1])
     if "3" in answer:
-        habit.add_predefined_habit(menuconnection, userid, predef[2])
+        habit.add_predefined_habit(menu_connection, user_id, predef[2])
     if "4" in answer:
-        habit.add_predefined_habit(menuconnection, userid, predef[3])
+        habit.add_predefined_habit(menu_connection, user_id, predef[3])
     if "5" in answer:
-        habit.add_predefined_habit(menuconnection, userid, predef[4])
-    habit_menu(userid)
+        habit.add_predefined_habit(menu_connection, user_id, predef[4])
+    habit_menu(user_id)
 
 
-def mark_as_completed(userid):
+def mark_as_completed(user_id):
     """ Function created in order to mark habits as completed """
-    text = Text("\nWhich habit do you want to mark as completed?📗\n")
+    text = Text(f"\nWhich habit do you want to mark as completed?{green_book}\n")
     text.stylize("bold chartreuse2")
     console.print(text)
-    cont = 1
+    continue_flow = 1
     date = datetime.today().strftime('%Y-%m-%d')
-    habits = habit.get_active_user_habits(menuconnection, userid)
+    habits = habit.get_active_user_habits(menu_connection, user_id)
     if type(habits) == list:
         utility.show_habits_table(list(habits))
         choices = []
         if habits:
             for hab in habits:
                 choices.append(f"{hab[0]} - {hab[1]} - {hab[4]}")
-            while cont:
-                answer = questionary.select("Choose the habit to complete:", qmark=markascompl, choices=choices).ask()
+            while continue_flow:
+                answer = questionary.select("Choose the habit to complete:", qmark=green_book, choices=choices).ask()
                 ans = answer.split(" - ")
-                alreadycompleted = habit.check_if_already_completed(menuconnection, ans[0], date)
-                if alreadycompleted.__eq__(1):
-                    text = Text("\nThis habit was already completed today! Choose another one!📗")
+                already_completed = habit.check_if_already_completed(menu_connection, ans[0], date)
+                if already_completed.__eq__(1):
+                    text = Text(f"\nThis habit was already completed today! Choose another one!{green_book}")
                     text.stylize("bold chartreuse2")
                     console.print(text)
                     choices.remove(f"{ans[0]} - {ans[1]} - {ans[2]}")
-                    cont = 1
+                    continue_flow = 1
                 else:
-                    habit.mark_habit_as_completed(menuconnection, ans[0])
-                    text = Text("\nThis habit was correctly completed! Well done!🎉\n")
+                    habit.mark_habit_as_completed(menu_connection, ans[0])
+                    text = Text(f"\nThis habit was correctly completed! Well done!{party_popper}\n")
                     text.stylize("bold violet")
                     console.print(text)
                     proceed = questionary.confirm("Do you want to complete another habit?",
-                                                  qmark=habitmodification).ask()
+                                                  qmark=wrench).ask()
                     if True.__eq__(proceed):
-                        cont = 1
+                        continue_flow = 1
                     else:
-                        cont = 0
+                        continue_flow = 0
         else:
             text = Text("\nYou don't have any habits yet! Create new habits in order to complete them!\n")
             text.stylize("bold red3")
             console.print(text)
-    habit_menu(userid)
+    habit_menu(user_id)
 
 
-def activate_deactivate(userid):
+def activate_deactivate(user_id):
     """ Function created in order to allow to activate or deactivate habits """
     text = Text("\nWhich habit do you want to activate/deactivate?\n")
     text.stylize("bold chartreuse2")
     console.print(text)
-    habits = habit.get_user_habits(menuconnection, userid)
+    habits = habit.get_user_habits(menu_connection, user_id)
     choices = []
     if type(habits) == list:
         utility.show_habits_table(list(habits))
         for hab in habits:
             choices.append(f"{hab[0]} - {hab[1]} - {hab[4]}")
-        answer = questionary.select("Choose the habit to activate/deactivate:", qmark=markascompl,
+        answer = questionary.select("Choose the habit to activate/deactivate:", qmark=balloon,
                                     choices=choices).ask()
         ans = answer.split(" - ")
-        habit.activate_deactivate_habit(menuconnection, ans[0])
-        text = Text("\nThe activation status was changed!\n")
+        habit.activate_deactivate_habit(menu_connection, ans[0])
+        text = Text(f"\nThe activation status was changed!{balloon}\n")
         text.stylize("bold deep_pink2")
         console.print(text)
 
@@ -342,33 +352,33 @@ def activate_deactivate(userid):
         text = Text("\nYou don't have any habits yet! Create new habits in order to activate/deactivate them!\n")
         text.stylize("bold red3")
         console.print(text)
-    habit_menu(userid)
+    habit_menu(user_id)
 
 
-def account_settings(userid):
+def account_settings(user_id):
     """ Secondary menu that allows to change username/password and delete account. """
-    habitmenuchoices = ["Change Username",
-                        "Change Password",
-                        "Delete Account",
-                        "Go back"]
+    account_menu_choices = ["Change Username",
+                            "Change Password",
+                            "Delete Account",
+                            "Go back"]
     options = {"Change Username": change_username,
                "Change Password": change_password,
                "Delete Account": delete_account,
                "Go back": habit_menu}
-    answer = questionary.select("What would you like to do?", choices=habitmenuchoices, qmark=habitmodification).ask()
-    options[answer](userid)
+    answer = questionary.select("What would you like to do?", choices=account_menu_choices, qmark=wrench).ask()
+    options[answer](user_id)
 
 
-def habits_analysis(userid):
+def habits_analysis(user_id):
     """ Secondary menu created for habits analysis. """
-    habitmenuchoices = ["Show all habits",
-                        "Show all active habits",
-                        "Show all non-active habits",
-                        "Show daily habits",
-                        "Show weekly habits",
-                        "Show monthly habits",
-                        "Show habit's progress",
-                        "Go back to main menu"]
+    habit_analysis_menu_choices = ["Show all habits",
+                                   "Show all active habits",
+                                   "Show all non-active habits",
+                                   "Show daily habits",
+                                   "Show weekly habits",
+                                   "Show monthly habits",
+                                   "Show habit's progress",
+                                   "Go back to main menu"]
     options = {"Show all habits": show_all,
                "Show all active habits": show_filtered_habits,
                "Show all non-active habits": show_filtered_habits,
@@ -378,26 +388,25 @@ def habits_analysis(userid):
                "Show habit's progress": show_streak,
                "Go back to main menu": habit_menu
                }
-    answer = questionary.select("What would you like to do?", choices=habitmenuchoices, qmark=habitmodification).ask()
+    answer = questionary.select("What would you like to do?", choices=habit_analysis_menu_choices, qmark=wrench).ask()
     if "Show daily habits".__eq__(answer):
-        options[answer](userid, "DAILY")
+        options[answer](user_id, "DAILY")
     elif "Show weekly habits".__eq__(answer):
-        options[answer](userid, "WEEKLY")
+        options[answer](user_id, "WEEKLY")
     elif "Show monthly habits".__eq__(answer):
-        options[answer](userid, "MONTHLY")
+        options[answer](user_id, "MONTHLY")
     elif "Show all active habits".__eq__(answer):
-        options[answer](userid, 1, "active")
+        options[answer](user_id, 1, "active")
     elif "Show all non-active habits".__eq__(answer):
-        options[answer](userid, 0, "active")
+        options[answer](user_id, 0, "active")
     else:
-        options[answer](userid)
+        options[answer](user_id)
 
 
-def exit_program(userid):
+def exit_program(user_id):
     """ Function of the menu that "logs out" the user (quit the program) """
-
-    logout = questionary.confirm("Are you sure you want to exit Habitool?", qmark=programexit).ask()
-    name = Text(user.get_firstname(menuconnection, userid).lower().capitalize() + "!⭐ \n")
+    logout = questionary.confirm("Are you sure you want to exit Habitool?", qmark=outbox_tray).ask()
+    name = Text(user.get_firstname(menu_connection, user_id).lower().capitalize() + f"!{qmark}\n")
     name.stylize("bold orange3")
     if True.__eq__(logout):
         text = Text("\nThanks for staying with us! See you soon ")
@@ -405,42 +414,37 @@ def exit_program(userid):
         console.print(text + name)
         quit()
     else:
-        habit_menu(userid)
+        habit_menu(user_id)
 
 
-def show_all(userid):
-    """
-    This function shows the table of all user habits (both active and non-active)
-    :param userid:
-    :return: none - it shows the table of all user habits
-    """
+def show_all(user_id):
+    """ This function shows the table of all user habits (both active and non-active) """
     text = Text("\nThese are all your habits!")
     text.stylize("bold royal_blue1")
-    habits = habit.get_user_habits(menuconnection, userid)
+    habits = habit.get_user_habits(menu_connection, user_id)
     if type(habits) == list:
         utility.show_habits_table(list(habits))
-        habits_analysis(userid)
+        habits_analysis(user_id)
     else:
         text = Text("\nYou don't have any habits yet! Create new habits!\n")
         text.stylize("bold red3")
         console.print(text)
 
 
-def show_streak(userid):
+def show_streak(user_id):
     """ Function created in order to calculate and show the max streak of days in which a habit was completed
         (only available for daily and active habits)."""
-    connection = utility.get_connection('test.db')
+    connection = utility.get_connection(db_name)
     text = Text("\nFor which habit do you want to check the streak (currently available for daily habits)?\n")
     text.stylize("bold chartreuse2")
     console.print(text)
-    habits = habit.get_user_habits_for_streak(connection, userid)
+    habits = habit.get_user_habits_for_streak(connection, user_id)
     choices = []
-    hab = []
     if not len(habits).__eq__(0):
         utility.show_habits_table(list(habits))
         for hab in habits:
             choices.append(f"{hab[0]} - {hab[1]} - {hab[4]}")
-        answer = questionary.select("Choose the habit:", qmark=markascompl,
+        answer = questionary.select("Choose the habit:", qmark=green_book,
                                     choices=choices).ask()
         ans = answer.split(" - ")
         dates = habit.get_streak(connection, ans[0])
@@ -455,7 +459,7 @@ def show_streak(userid):
                         i0max, i1max = i0, i1
                     i0 = i1
             utility.show_dates_streak(npdates[i0max:i1max])
-            message = f"\nThe maximum completion streak for this habit is: {npdates[i0max:i1max].size} days! Well done!🎉\n"
+            message = f"\nThe maximum completion streak for this habit is: {npdates[i0max:i1max].size} days! Well done!{party_popper}\n"
             text = Text(message)
             text.stylize("bold orange1")
             console.print(text)
@@ -469,106 +473,109 @@ def show_streak(userid):
             text = Text(message)
             text.stylize("bold red3")
             console.print(text)
-    habit_menu(userid)
+    habit_menu(user_id)
 
 
-def show_filtered_habits(userid, filterval, column='periodicity'):
+def show_filtered_habits(user_id, filter_value, column='periodicity'):
     """ Function created in order to show filtered habits (active, non-active, DAILY, WEEKLY, MONTHLY)"""
     if column.__eq__('periodicity'):
-        val = filterval.lower()
-        filterval = f"'{filterval}'"
-    elif column.__eq__('active') and filterval.__eq__(1):
+        val = filter_value.lower()
+        filter_value = f"'{filter_value}'"
+    elif column.__eq__('active') and filter_value.__eq__(1):
         val = 'active'
-    elif column.__eq__('active') and filterval.__eq__(0):
+    elif column.__eq__('active') and filter_value.__eq__(0):
         val = 'non-active'
-    habits = habit.get_filtered_habits(menuconnection, userid, filterval, column)
+    habits = habit.get_filtered_habits(menu_connection, user_id, filter_value, column)
     if type(habits) == list:
         message = "\nThese are all your " + f"{val}" + " habits: \n"
         text = Text(message)
         text.stylize("bold royal_blue1")
         console.print(text)
         utility.show_habits_table(list(habits))
-        habits_analysis(userid)
+        habits_analysis(user_id)
     elif habits.__eq__(-1):
         message = "\nYou don't have any " + f"{val}" + " habits! Create a new one! \n"
         text = Text(message)
         text.stylize("bold red3")
         console.print(text)
-    habit_menu(userid)
+    habit_menu(user_id)
 
 
-def change_habit_name(habitid):
-    name = questionary.text("Choose a new name for your habit: ", qmark=habitmodification).ask()
-    return habit.modify_habit(menuconnection, habitid, "habit_name", name)
+def change_habit_name(habit_id):
+    """ Function created in order to allow the modification of a habit's name """
+    name = questionary.text("Choose a new name for your habit: ", qmark=wrench).ask()
+    return habit.modify_habit(menu_connection, habit_id, "habit_name", name)
 
 
-def change_habit_description(habitid):
-    description = questionary.text("Write a new description for your habit: ", qmark=habitmodification).ask()
-    return habit.modify_habit(menuconnection, habitid, "habit_description", description)
+def change_habit_description(habit_id):
+    """ Function created in order to allow the modification of a habit's description """
+    description = questionary.text("Write a new description for your habit: ", qmark=wrench).ask()
+    return habit.modify_habit(menu_connection, habit_id, "habit_description", description)
 
 
-def change_habit_periodicity(habitid):
+def change_habit_periodicity(habit_id):
+    """ Function created in order to allow the modification of a habit's periodicity """
+
     period = questionary.select("Chose a new description for your habit: ", choices=periodicitychoices,
-                                qmark=habitmodification).ask()
-    return habit.modify_habit(menuconnection, habitid, "periodicity", period)
+                                qmark=wrench).ask()
+    return habit.modify_habit(menu_connection, habit_id, "periodicity", period)
 
 
-def change_username(userid):
+def change_username(user_id):
     """ Function created in order to allow the modification of the username """
     cont = 1
     while cont:
-        username = questionary.text("Choose your new username: ", qmark=habitmodification).ask()
-        password = questionary.password("Insert your password: ", qmark=habitmodification).ask()
-        result = user.change_username(menuconnection, userid, username, password)
+        username = questionary.text("Choose your new username: ", qmark=wrench).ask()
+        password = questionary.password("Insert your password: ", qmark=wrench).ask()
+        result = user.change_username(menu_connection, user_id, username, password)
         if result.__eq__(-1):
-            password = questionary.password("Wrong password. Try again: ", qmark=habitmodification).ask()
-            result = user.change_username(menuconnection, userid, username, password)
+            password = questionary.password("Wrong password. Try again: ", qmark=wrench).ask()
+            result = user.change_username(menu_connection, user_id, username, password)
         if result.__eq__(-2):
             username = questionary.text("This username is already taken. Choose a new one: ",
-                                        qmark=habitmodification).ask()
-            result = user.change_username(menuconnection, userid, username, password)
+                                        qmark=wrench).ask()
+            result = user.change_username(menu_connection, user_id, username, password)
         if result.__eq__(1):
-            text = Text("\nThe username was correctly changed! Your new username is " + username + "!🛠️\n")
+            text = Text(
+                "\nThe username was correctly changed! Your new username is " + username + f"!{hammer_and_wrench}\n")
             text.stylize("bold medium_purple1")
             console.print(text)
             cont = 0
-    habit_menu(userid)
+    habit_menu(user_id)
 
 
-def change_password(userid):
+def change_password(user_id):
     """ Function created in order to allow the modification of the password """
-
-    cont = 1
-    while cont:
-        currentpassword = questionary.password("Insert your current password: ", qmark=habitmodification).ask()
-        newpassword = questionary.password("Insert your new password: ", qmark=habitmodification,
-                                           validate=utility.password_validator).ask()
-        result = user.change_password(menuconnection, userid, currentpassword, newpassword)
+    continue_flow = 1
+    while continue_flow:
+        current_password = questionary.password("Insert your current password: ", qmark=wrench).ask()
+        new_password = questionary.password("Insert your new password: ", qmark=wrench,
+                                            validate=utility.password_validator).ask()
+        result = user.change_password(menu_connection, user_id, current_password, new_password)
         if result.__eq__(-1):
-            currentpassword = questionary.password("Your current password is wrong. Try again: ",
-                                                   qmark=habitmodification).ask()
-            newpassword = questionary.password("Insert your new password: ", qmark=habitmodification,
-                                               validate=utility.password_validator).ask()
-            result = user.change_username(menuconnection, userid, currentpassword, newpassword)
+            current_password = questionary.password("Your current password is wrong. Try again: ",
+                                                    qmark=wrench).ask()
+            new_password = questionary.password("Insert your new password: ", qmark=wrench,
+                                                validate=utility.password_validator).ask()
+            result = user.change_username(menu_connection, user_id, current_password, new_password)
         if result.__eq__(1):
-            cont = 0
-    text = Text("\nYour password was correctly changed!🛠️\n")
+            continue_flow = 0
+    text = Text(f"\nYour password was correctly changed!{hammer_and_wrench}\n")
     text.stylize("bold medium_purple1")
     console.print(text)
-    habit_menu(userid)
+    habit_menu(user_id)
 
 
-def delete_account(userid):
+def delete_account(user_id):
     """ Function created in order to allow account deletion """
-
-    delete = questionary.confirm("Are you sure you want to delete your Habitool account?", qmark="❌").ask()
-    name = Text(user.get_firstname(menuconnection, userid).lower().capitalize() + "!⭐ \n")
+    delete = questionary.confirm("Are you sure you want to delete your Habitool account?", qmark=x_emoji).ask()
+    name = Text(user.get_firstname(menu_connection, user_id).lower().capitalize() + f"!{qmark}\n")
     name.stylize("bold orange3")
     if True.__eq__(delete):
-        user.delete_account(menuconnection, userid)
+        user.delete_account(menu_connection, user_id)
         text = Text("\nWe're sorry to hear that. Thanks for staying with us. Bye,  ")
         text.stylize("bold royal_blue1")
         console.print(text + name)
         quit()
     else:
-        habit_menu(userid)
+        habit_menu(user_id)

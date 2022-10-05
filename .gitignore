@@ -133,4 +133,5 @@ docs/_build/
 # PyBuilder
 target/
 
-*.db
+test.db
+habitool.db
