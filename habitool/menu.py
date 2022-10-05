@@ -273,7 +273,7 @@ def choose_predefined_habits(user_id):
     utility.show_predefined_habits(predef)
     choices = ["I don't want any predefined habit", "1", "2", "3", "4", "5", "All of the above"]
     answer = questionary.checkbox("Select habits: ", choices=choices, qmark=qmark).ask()
-    # TODO: find better and more dynamic way to add predefined habits bases on user choice
+    # TODO: find better and more dynamic way to add predefined habits based on user choice
     if "All of the above" in answer:
         for p in predef:
             habit.add_predefined_habit(menu_connection, user_id, p)
@@ -416,7 +416,7 @@ def exit_program(user_id):
     name.stylize("bold orange3")
     if True.__eq__(logout):
         text = Text("\nThanks for staying with us! See you soon ")
-        text.stylize("bold royal_blue1")
+        text.stylize("bold light_slate_blue")
         console.print(text + name)
         quit()
     else:
@@ -580,7 +580,7 @@ def delete_account(user_id):
     if True.__eq__(delete):
         user.delete_account(menu_connection, user_id)
         text = Text("\nWe're sorry to hear that. Thanks for staying with us. Bye,  ")
-        text.stylize("bold royal_blue1")
+        text.stylize("bold light_slate_blue")
         console.print(text + name)
         quit()
     else:
