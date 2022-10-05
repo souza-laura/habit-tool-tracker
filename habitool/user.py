@@ -15,8 +15,8 @@ def register(connection, firstname, lastname, username, password):
 def login(connection, username, password):
     """Function that allows to login / access an acccount.
     This function returns the user_id, that will be used for future operations."""
-    userdbpassword = get_user_and_encrypted_pw(connection, username)
-    if bcrypt.checkpw(password.encode('utf-8'), userdbpassword):
+    user_db_password = get_user_and_encrypted_pw(connection, username)
+    if bcrypt.checkpw(password.encode('utf-8'), user_db_password):
         return get_user_id(connection, username)
     else:
         return -1
@@ -24,10 +24,10 @@ def login(connection, username, password):
 
 def change_username(connection, user_id, newusername, password):
     """Function that allows to change the username"""
-    existsnewusername = check_existing_username(connection, newusername)
-    dbpassword = get_password(connection, user_id)
-    if bcrypt.checkpw(password.encode('utf-8'), dbpassword):
-        if not existsnewusername:
+    exists_new_username = check_existing_username(connection, newusername)
+    db_password = get_password(connection, user_id)
+    if bcrypt.checkpw(password.encode('utf-8'), db_password):
+        if not exists_new_username:
             with connection:
                 cur = connection.cursor()
                 cur.execute("UPDATE user SET username=(?) WHERE user_id = (?)", (newusername, user_id))
@@ -38,14 +38,14 @@ def change_username(connection, user_id, newusername, password):
         return -1
 
 
-def change_password(connection, user_id, oldpassword, newpassword):
+def change_password(connection, user_id, old_password, new_password):
     """Function that allows to change the password"""
-    dbpassword = get_password(connection, user_id)
-    newpassword = bcrypt.hashpw(newpassword.encode('utf-8'), bcrypt.gensalt())
-    if bcrypt.checkpw(oldpassword.encode('utf-8'), dbpassword):
+    db_password = get_password(connection, user_id)
+    new_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+    if bcrypt.checkpw(old_password.encode('utf-8'), db_password):
         with connection:
             cur = connection.cursor()
-            cur.execute("UPDATE user SET password=(?) WHERE user_id = (?)", (newpassword, user_id))
+            cur.execute("UPDATE user SET password=(?) WHERE user_id = (?)", (new_password, user_id))
             return 1
     else:
         return -1
@@ -91,14 +91,13 @@ def get_random_user_id(connection):
     """User utility function for tests that allows to get a random user_id among those saved on the DB"""
     with connection:
         cur = connection.cursor()
-        uidlist = cur.execute("SELECT user_id FROM user").fetchall()
+        user_ids_list = cur.execute("SELECT user_id FROM user").fetchall()
         uid = -1
-        if uidlist:
-            uid = random.choice(uidlist)
+        if user_ids_list:
+            uid = random.choice(user_ids_list)
         return uid
 
 
-# TODO: delete this function if it's not useful
 def get_username(connection, user_id):
     with connection:
         cur = connection.cursor()
@@ -124,16 +123,21 @@ def check_existing_uid(connection, user_id):
 
 def get_user_and_encrypted_pw(connection, username):
     exists = check_existing_username(connection, username)
-    dbpassword = None
+    db_password = None
     if exists:
         user_id = get_user_id(connection, username)
-        dbpassword = get_password(connection, user_id)
-    return dbpassword
+        db_password = get_password(connection, user_id)
+    return db_password
 
 
-# TODO: WRITE DOCUMENTATION OF USER CLASS
 class User:
-    """User class: this class has the purpose of creating a new user Object by creating an instance of this class."""
+    """User class: this class has the purpose of creating a new user Object by creating an instance of this class.
+        Attributes:
+                firstname: First name of the user.
+                lastname: Last name of the user.
+                username: Username that will be used for accessing the tool.
+                password: Password that will be used for accessing the tool.
+    """
     def __int__(self, firstname, lastname, username, password):
         self.firstname = firstname
         self.lastname = lastname

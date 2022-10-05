@@ -43,9 +43,9 @@ def show_habits_progress(habits: list):
     table.add_column("Completion Date")
     if habits:
         for hab in habits:
-            creationdate = datetime.datetime.strptime(hab[3], "%Y-%m-%d").strftime('%d/%m/%Y')
-            completiondate = datetime.datetime.strptime(hab[4], "%Y-%m-%d").strftime('%d/%m/%Y')
-            table.add_row(str(hab[0]), hab[1], hab[2], creationdate, completiondate)
+            creation_date = datetime.datetime.strptime(hab[3], "%Y-%m-%d").strftime('%d/%m/%Y')
+            completion_date = datetime.datetime.strptime(hab[4], "%Y-%m-%d").strftime('%d/%m/%Y')
+            table.add_row(str(hab[0]), hab[1], hab[2], creation_date, completion_date)
         console = Console()
         console.print(table)
 
@@ -111,11 +111,10 @@ def text_validator(text):
 
 def render_title():
     """ Utility function for rendering the title """
-    # TODO: svg rendering of new title
     title = render('Habitool', font='block')
     print(title)
 
 
 def get_connection(dbname):
-    """ Utility function for getting the connection """
+    """ Utility function for getting the connection from the database module"""
     return initialize_database(dbname)

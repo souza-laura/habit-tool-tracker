@@ -10,10 +10,9 @@ import habit
 import user
 import utility
 
+# database initialization
 db_name = 'test.db'
-# DB Initialization
 menu_connection = utility.get_connection(db_name)
-console = Console()
 
 # EMOJIS
 qmark = emoji.emojize(" :star: ")
@@ -31,14 +30,17 @@ balloon = emoji.emojize(" :balloon: ")
 hammer_and_wrench = emoji.emojize(" :hammer_and_wrench: ")
 
 # Lists that may be used more than once in the program
-periodicitychoices = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]
-modificationchoices = ["Name", "Description", "Periodicity"]
+periodicity_choices = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]
+modification_choices = ["Name", "Description", "Periodicity"]
+
+# rich console
+console = Console()
 
 
 def menu():
     """ Menu function that is accessed from main.py
         This is the first access to the program, from here we can login or register."""
-
+    # rendering the title
     utility.render_title()
     welcome_message = "Welcome to Habitool! Is it your first time here?"
     res = questionary.confirm(welcome_message, qmark=qmark).ask()
@@ -61,16 +63,20 @@ def registration_form():
     username = questionary.text("Choose a username (The username will be used for the login):",
                                 validate=utility.text_validator,
                                 qmark=qmark).ask()
+    # check if the inserted username already exists
     exists = user.check_existing_username(menu_connection, username)
     while exists:
         username = questionary.text("This username is already taken. Choose another one:",
                                     validate=utility.text_validator,
                                     qmark=qmark).ask()
+        # check again
         exists = user.check_existing_username(menu_connection, username)
     password = questionary.password("Choose the password: ",
                                     validate=utility.password_validator,
                                     qmark=qmark).ask()
+    # encode password before encrypting
     password.encode('utf-8')
+    # registration that returns the user id that belongs to the newly registered user
     user_id = user.register(menu_connection, firstname, lastname, username.lower(), password)
     if not user_id.__eq__(-1):
         text = Text("\n\nWelcome to Habitool, ")
@@ -123,7 +129,7 @@ def login_form():
 
 
 def first_login(user_id):
-    """ This is the function that is called at the user'd first login. Here we can choose whether
+    """ This is the function that is called at the user's first login. Here we can choose whether
         we want predefined habits or not."""
     response = questionary.confirm("You don't have any habit yet. Do you want to chose some predefined habits?",
                                    qmark=qmark).ask()
@@ -166,7 +172,7 @@ def create_new_habit(user_id):
     name = questionary.text("Choose a name for your new habit: ", qmark=seedling).ask()
     description = questionary.text("Choose a description for your new habit: ", qmark=seedling).ask()
     period = questionary.select("Choose a periodicity for your new habit: ",
-                                choices=periodicitychoices, qmark=seedling).ask()
+                                choices=periodicity_choices, qmark=seedling).ask()
     active = questionary.confirm("Do you want to activate the habit?", qmark=seedling).ask()
     if True.__eq__(active):
         active = 1
@@ -236,7 +242,7 @@ def modify_habit(user_id):
         while continue_flow:
             answer = questionary.select("Choose the habit to modify:", qmark=wrench, choices=choices).ask()
             ans = answer.split(" - ")
-            choice = questionary.select("What do you want to modify?", choices=modificationchoices,
+            choice = questionary.select("What do you want to modify?", choices=modification_choices,
                                         qmark=wrench).ask()
             if "Name".__eq__(choice):
                 result = change_habit_name(ans[0])
@@ -516,15 +522,15 @@ def change_habit_description(habit_id):
 def change_habit_periodicity(habit_id):
     """ Function created in order to allow the modification of a habit's periodicity """
 
-    period = questionary.select("Chose a new description for your habit: ", choices=periodicitychoices,
+    period = questionary.select("Chose a new description for your habit: ", choices=periodicity_choices,
                                 qmark=wrench).ask()
     return habit.modify_habit(menu_connection, habit_id, "periodicity", period)
 
 
 def change_username(user_id):
     """ Function created in order to allow the modification of the username """
-    cont = 1
-    while cont:
+    continue_flow = 1
+    while continue_flow:
         username = questionary.text("Choose your new username: ", qmark=wrench).ask()
         password = questionary.password("Insert your password: ", qmark=wrench).ask()
         result = user.change_username(menu_connection, user_id, username, password)
@@ -540,7 +546,7 @@ def change_username(user_id):
                 "\nThe username was correctly changed! Your new username is " + username + f"!{hammer_and_wrench}\n")
             text.stylize("bold medium_purple1")
             console.print(text)
-            cont = 0
+            continue_flow = 0
     habit_menu(user_id)
 
 

@@ -2,12 +2,12 @@ from user import check_existing_uid
 import random
 
 
-def add_new_habit(connection, user_id, habitname, habitdescription, periodicity, active):
+def add_new_habit(connection, user_id, habit_name, habit_description, periodicity, active):
     """Function that allows to create a new habit, by creating a new instance of the Habit class"""
     habit = Habit()
     habit.user_id = user_id
-    habit.habitname = habitname
-    habit.habitdescription = habitdescription
+    habit.habitname = habit_name
+    habit.habitdescription = habit_description
     habit.periodicity = periodicity
     habit.active = active
     habit.habittype = "USER"
@@ -33,17 +33,17 @@ def get_random_habit(connection):
     """Utility function for tests that allows to get a random habit from the Db"""
     with connection:
         cur = connection.cursor()
-        habit_idlist = cur.execute("SELECT user_id FROM user").fetchall()
+        habit_id_list = cur.execute("SELECT user_id FROM user").fetchall()
         habit_id = -1
-        if habit_idlist:
-            habit_id = random.choice(habit_idlist)
+        if habit_id_list:
+            habit_id = random.choice(habit_id_list)
         return habit_id[0]
 
 
 def get_user_habits(connection, user_id):
     """Function that allows to get all habits that belong to a specific user."""
-    userhashabits = has_habits(connection, user_id)
-    if userhashabits:
+    user_has_habits = has_habits(connection, user_id)
+    if user_has_habits:
         with connection:
             cur = connection.cursor()
             habits = cur.execute("SELECT habit_id, habit_name, habit_description, "
@@ -51,13 +51,13 @@ def get_user_habits(connection, user_id):
                                  "user_id=(?)", (user_id,)).fetchall()
             return habits
     else:
-        return userhashabits
+        return user_has_habits
 
 
 def get_active_user_habits(connection, user_id):
     """Function that allows to get all active habits that belong to a specific user."""
-    userhashabits = has_habits(connection, user_id)
-    if userhashabits:
+    user_has_habits = has_habits(connection, user_id)
+    if user_has_habits:
         with connection:
             cur = connection.cursor()
             habits = cur.execute("SELECT habit_id, habit_name, habit_description, "
@@ -65,7 +65,7 @@ def get_active_user_habits(connection, user_id):
                                  "user_id=(?) AND active = 1", (user_id,)).fetchall()
             return habits
     else:
-        return userhashabits
+        return user_has_habits
 
 
 def get_user_habits_for_streak(connection, user_id):
@@ -85,7 +85,6 @@ def get_user_habits_for_streak(connection, user_id):
 def get_filtered_habits(connection, user_id, filterval, column='periodicity'):
     """Function that allows to get filtered (active, non-active, DAILY, WEEKLY, MONTHLY) habits for habit analysis that belong to a specific user.
     For these habits will be available the option to view the MAX streak."""
-
     query = f"SELECT habit_id, habit_name, habit_description, date(creation_date) as creation_date, periodicity, active FROM habit WHERE user_id = {user_id} AND {column} = {filterval}"
     with connection:
         cur = connection.cursor()
@@ -98,8 +97,7 @@ def get_filtered_habits(connection, user_id, filterval, column='periodicity'):
 
 
 def activate_deactivate_habit(connection, habit_id):
-    """Function that allows activate or deactivate habits that belong to a specific user."""
-
+    """Function that allows to activate or deactivate habits that belong to a specific user."""
     active = None
     if habit_exists(connection, habit_id):
         status = _getactivationstatus(connection, habit_id)
@@ -114,17 +112,17 @@ def activate_deactivate_habit(connection, habit_id):
             cur.execute("UPDATE habit SET active=(?) WHERE habit_id = (?)", (active, habit_id))
 
 
-def modify_habit(connection, habit_id, columntoupdate, newvalue):
+def modify_habit(connection, habit_id, column_to_update, new_value):
     """Function that allows to modify a habit's property"""
 
-    query = f"UPDATE habit SET {columntoupdate}=" + f"'{newvalue}'" + f" WHERE habit_id = {habit_id}"
+    query = f"UPDATE habit SET {column_to_update}=" + f"'{new_value}'" + f" WHERE habit_id = {habit_id}"
     if habit_exists(connection, habit_id):
         with connection:
             cur = connection.cursor()
             cur.execute(query)
-            query = f"SELECT {columntoupdate} from habit WHERE habit_id = {habit_id}"
-            modifiedvalue = cur.execute(query).fetchone()[0]
-            if modifiedvalue.__eq__(f"{newvalue}"):
+            query = f"SELECT {column_to_update} from habit WHERE habit_id = {habit_id}"
+            modified_value = cur.execute(query).fetchone()[0]
+            if modified_value.__eq__(f"{new_value}"):
                 return 1
             else:
                 return -1
@@ -152,8 +150,8 @@ def habit_exists(connection, habit_id):
 
 def has_habits(connection, user_id):
     """Utility function that allows to check if the user has any habits"""
-    userexists = check_existing_uid(connection, user_id)
-    if userexists:
+    user_exists = check_existing_uid(connection, user_id)
+    if user_exists:
         with connection:
             cur = connection.cursor()
             habits = cur.execute("SELECT COUNT(*) FROM habit WHERE user_id=(?)", (user_id,)).fetchone()[0]
@@ -209,7 +207,6 @@ def check_habit_progress(connection, habit_id):
 
 def check_if_already_completed(connection, habit_id, date):
     """Utility function that allows to check if a habit was already completed on the current date"""
-
     with connection:
         cur = connection.cursor()
         check = cur.execute("SELECT COUNT(*) FROM progress WHERE habit_id=(?) AND progress_date=(?) ",
@@ -237,7 +234,15 @@ def add_predefined_habit(connection, user_id, predefined: list):
 
 
 class Habit:
-    """Habit class: this class has the purpose of creating a new habit Object by creating an instance of this class."""
+    """Habit class: this class has the purpose of creating a new habit Object by creating an instance of this class.
+            Attributes:
+                user_id: attribute that tells to which user a habit belongs.
+                habitname: Name of the habit.
+                habitdescription: Description of the habit.
+                periodicity: Periodicity of the habit.
+                active: Activation status of the habit.
+                habittype: type of habit (USER, PREDEFINED)
+    """
     def __int__(self, user_id, habitname, habitdescription, periodicity, active, habittype):
         self.user_id = user_id
         self.habitname = habitname
