@@ -1,4 +1,4 @@
-from habitool.user import check_existing_uid
+from user import check_existing_uid
 import random
 
 

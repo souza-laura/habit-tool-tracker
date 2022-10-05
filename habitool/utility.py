@@ -6,7 +6,7 @@ from cfonts import render
 from rich.console import Console
 from rich.table import Table
 
-from habitool.database import initialize_database
+from database import initialize_database
 
 party_popper = emoji.emojize(":party_popper:")
 
