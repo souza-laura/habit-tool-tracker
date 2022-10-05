@@ -444,8 +444,6 @@ def show_streak(userid):
                                     choices=choices).ask()
         ans = answer.split(" - ")
         dates = habit.get_streak(connection, ans[0])
-        print(dates)
-        print(type(dates))
         if type(dates) == list and len(dates) > 1:
             # calculating max streak
             npdates = np.array(dates, dtype='datetime64[D]')

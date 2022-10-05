@@ -3,9 +3,7 @@ import unittest
 
 from faker import Faker
 
-import habit
-import user
-import utility
+from habitool import user, habit, utility
 
 fake = Faker()
 fake.name()

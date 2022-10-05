@@ -2,8 +2,7 @@ import unittest
 
 from faker import Faker
 
-import user
-import utility
+from habitool import user, utility
 
 fake = Faker()
 fake.name()
