@@ -20,7 +20,7 @@ python main.py
 This is a CLI application, so any interaction with the program will happen through the terminal.
 This is the first thing you'll see at the start of the application:
 
-![](/Users/lauradealmeidasouza/Desktop/Screenshot 2022-10-05 at 12.26.47.png "habitool-start-screenshot")
+![](/Users/lauradealmeidasouza/development/habit-tool-tracker/img/Screenshot 2022-10-05 at 12.26.47.png "habitool-start-screenshot")
 
 Habitool is a simple too that will allow you to create an account in order to create,complete and generally manage your habits.
 
@@ -28,19 +28,19 @@ Below a few screenshots that show some of the program's main features:
 
 **Habitool main menu:**
 
-![](/Users/lauradealmeidasouza/Desktop/Screenshot 2022-10-05 at 12.36.20.png "habitool-main-menu")
+![](/Users/lauradealmeidasouza/development/habit-tool-tracker/img/Screenshot 2022-10-05 at 12.36.20.png "habitool-main-menu")
 
 **Habits table:**
 
-![](/Users/lauradealmeidasouza/Desktop/Screenshot 2022-10-05 at 12.36.53.png "habitool-habits-table")
+![](/Users/lauradealmeidasouza/development/habit-tool-tracker/img/Screenshot 2022-10-05 at 12.36.53.png "habitool-habits-table")
 
 **Creation of a new habit:**
 
-![](/Users/lauradealmeidasouza/Desktop/Screenshot 2022-10-05 at 12.38.49.png "creation-of-new-habit")
+![](/Users/lauradealmeidasouza/development/habit-tool-tracker/img/Screenshot 2022-10-05 at 12.38.49.png "creation-of-new-habit")
 
 **Max Completion streak view:**
 
-![](/Users/lauradealmeidasouza/Desktop/Screenshot 2022-10-05 at 12.40.24.png "streak-view")
+![](/Users/lauradealmeidasouza/development/habit-tool-tracker/img/Screenshot 2022-10-05 at 12.40.24.png "streak-view")
 
 
 
