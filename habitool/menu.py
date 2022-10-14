@@ -119,8 +119,10 @@ def login_form():
         if not check.__eq__(-1):
             break
         if wrong_password_counter.__eq__(3):
-            # TODO: wrong password more than three times
-            pass
+            text = Text(f"\nYou digited the wrong password too many times. Try again, or re-register!{confused_emoji}\n")
+            text.stylize("bold red3")
+            console.print(text)
+            login_form()
     # Personalized login message
     text = Text("\nWelcome back to Habitool, ")
     text.stylize("bold", 0)
