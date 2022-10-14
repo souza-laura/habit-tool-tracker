@@ -11,12 +11,12 @@ import user
 import utility
 
 # database initialization
-db_name = 'test.db'
+db_name = 'habitool.db'
 menu_connection = utility.get_connection(db_name)
 
 # EMOJIS
 qmark = emoji.emojize(" :star: ")
-x_emoji = emoji.emojize(" :x: ")
+x_emoji = emoji.emojize(" :police_car_light: ")
 seedling = emoji.emojize(" :seedling: ")
 fire = emoji.emojize(" :fire: ")
 wrench = emoji.emojize(" :wrench: ")
@@ -100,7 +100,9 @@ def login_form():
     wrong_password_counter = 0
     username = questionary.text("Username: ", qmark=qmark).ask()
     exists = user.check_existing_username(menu_connection, username.lower())
+    # che if the account actually exists
     while not exists:
+        # new registration if it doesn't exist
         proceed = questionary.confirm("There's no such username. Do you want to proceed with registration?",
                                       qmark=qmark).ask()
         if True.__eq__(proceed):
@@ -119,11 +121,13 @@ def login_form():
         if wrong_password_counter.__eq__(3):
             # TODO: wrong password more than three times
             pass
+    # Personalized login message
     text = Text("\nWelcome back to Habitool, ")
     text.stylize("bold", 0)
     firstname = Text(user.get_firstname(menu_connection, check).lower().capitalize() + "!\n")
     firstname.stylize("bold orange3", 0)
     console.print(text + firstname)
+    # everytime i check if the user has habits
     has_habit = habit.has_habits(menu_connection, check)
     habit_menu(check, has_habit)
 
@@ -158,6 +162,7 @@ def habit_menu(user_id, has_habit=0):
                "Account Settings": account_settings,
                "Exit Habitool": exit_program}
     if has_habit.__eq__(-1):
+        # if it doesn't has habits, choose if want predefined habits
         first_login(user_id)
     else:
         answer = questionary.select("What would you like to do?", choices=habit_menu_choices, qmark=qmark).ask()
@@ -178,12 +183,15 @@ def create_new_habit(user_id):
         active = 1
     else:
         active = 0
+    # create new habit
     habit_id = habit.add_new_habit(menu_connection, user_id, name, description, period, active)
+    # check if the habit was successfully created ->
     exists = habit.habit_exists(menu_connection, habit_id)
     if exists.__eq__(1):
         text = Text(f"\nNew habit successfully created!{butterfly}\n")
         text.stylize("bold sky_blue1")
         console.print(text)
+        #  -> if so, got to main menu
         habit_menu(user_id)
     else:
         text = Text(f"\nSorry something went wrong. Try again.{confused_emoji}\n")
@@ -198,6 +206,7 @@ def delete_habit(user_id):
     text.stylize("bold deep_pink2")
     console.print(text)
     continue_flow = 1
+    # get user habits
     habits = habit.get_user_habits(menu_connection, user_id)
     if type(habits) == list:
         utility.show_habits_table(list(habits))
@@ -209,20 +218,24 @@ def delete_habit(user_id):
             ans = answer.split(" - ")
             confirmation = questionary.confirm("Are you sure you want to delete the habit?", qmark=fire).ask()
             if True.__eq__(confirmation):
+                # delete habit by passing habit id
                 deleted = habit.delete_habit(menu_connection, ans[0])
                 if deleted:
                     text = Text(f"\nThe habit was correctly deleted.{fire}\n")
                     text.stylize("bold deep_pink2")
                     console.print(text)
                     proceed = questionary.confirm("Do you want to delete another habit?", qmark=fire).ask()
+                    # user can proceed with other deletions
                     if True.__eq__(proceed):
                         continue_flow = 1
                     else:
+                        # exit the loop
                         continue_flow = 0
                 else:
                     text = Text(f"\nSomething went wrong with habit deletion. Try again.{confused_emoji}\n")
                     text.stylize("bold red3")
                     console.print(text)
+    # go back to main menu
     habit_menu(user_id)
 
 
@@ -233,6 +246,7 @@ def modify_habit(user_id):
     text.stylize("bold light_coral")
     console.print(text)
     continue_flow = 1
+    # get user habits
     habits = habit.get_user_habits(menu_connection, user_id)
     if type(habits) == list:
         utility.show_habits_table(list(habits))
@@ -244,6 +258,7 @@ def modify_habit(user_id):
             ans = answer.split(" - ")
             choice = questionary.select("What do you want to modify?", choices=modification_choices,
                                         qmark=wrench).ask()
+            # based on the choice, change name / description / periodicity by passing user
             if "Name".__eq__(choice):
                 result = change_habit_name(ans[0])
             if "Description".__eq__(choice):
@@ -310,11 +325,13 @@ def mark_as_completed(user_id):
             while continue_flow:
                 answer = questionary.select("Choose the habit to complete:", qmark=green_book, choices=choices).ask()
                 ans = answer.split(" - ")
+                # check if habit was already marked as completed on the same day
                 already_completed = habit.check_if_already_completed(menu_connection, ans[0], date)
                 if already_completed.__eq__(1):
                     text = Text(f"\nThis habit was already completed today! Choose another one!{green_book}")
                     text.stylize("bold chartreuse2")
                     console.print(text)
+                    # remove habit already completed from list
                     choices.remove(f"{ans[0]} - {ans[1]} - {ans[2]}")
                     continue_flow = 1
                 else:
@@ -428,13 +445,14 @@ def show_all(user_id):
     text = Text("\nThese are all your habits!")
     text.stylize("bold royal_blue1")
     habits = habit.get_user_habits(menu_connection, user_id)
-    if type(habits) == list:
+    if type(habits) == list and habits:
         utility.show_habits_table(list(habits))
         habits_analysis(user_id)
     else:
         text = Text("\nYou don't have any habits yet! Create new habits!\n")
         text.stylize("bold red3")
         console.print(text)
+        habit_menu(user_id)
 
 
 def show_streak(user_id):
@@ -455,7 +473,7 @@ def show_streak(user_id):
         ans = answer.split(" - ")
         dates = habit.get_streak(connection, ans[0])
         if type(dates) == list and len(dates) > 1:
-            # calculating max streak
+            # calculating max streak using np.array
             npdates = np.array(dates, dtype='datetime64[D]')
             i0max, i1max = 0, 0
             i0 = 0
@@ -492,7 +510,7 @@ def show_filtered_habits(user_id, filter_value, column='periodicity'):
     elif column.__eq__('active') and filter_value.__eq__(0):
         val = 'non-active'
     habits = habit.get_filtered_habits(menu_connection, user_id, filter_value, column)
-    if type(habits) == list:
+    if type(habits) == list :
         message = "\nThese are all your " + f"{val}" + " habits: \n"
         text = Text(message)
         text.stylize("bold royal_blue1")
