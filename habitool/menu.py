@@ -5,6 +5,7 @@ import numpy as np
 import questionary
 from rich.console import Console
 from rich.text import Text
+from quo.console import Console as Console_
 
 import habit
 import user
@@ -124,6 +125,11 @@ def login_form():
             console.print(text)
             login_form()
     # Personalized login message
+   
+    
+    console_ = Console_()
+     # print a multi-colored rule
+    console_.rule(multicolored=True)
     text = Text("\nWelcome back to Habitool, ")
     text.stylize("bold", 0)
     firstname = Text(user.get_firstname(menu_connection, check).lower().capitalize() + "!\n")
