@@ -87,15 +87,6 @@ def get_user_id(connection, username):
     return uid
 
 
-def get_random_user_id(connection):
-    """User utility function for tests that allows to get a random user_id among those saved on the DB"""
-    with connection:
-        cur = connection.cursor()
-        user_ids_list = cur.execute("SELECT user_id FROM user").fetchall()
-        uid = -1
-        if user_ids_list:
-            uid = random.choice(user_ids_list)
-        return uid
 
 
 def get_username(connection, user_id):

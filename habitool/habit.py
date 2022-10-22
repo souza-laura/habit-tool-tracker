@@ -1,5 +1,9 @@
 from user import check_existing_uid
 import random
+import numpy as np
+
+
+
 
 
 def add_new_habit(connection, user_id, habit_name, habit_description, periodicity, active):
@@ -33,11 +37,11 @@ def get_random_habit(connection):
     """Utility function for tests that allows to get a random habit from the Db"""
     with connection:
         cur = connection.cursor()
-        habit_id_list = cur.execute("SELECT user_id FROM user").fetchall()
+        habit_id_list = cur.execute("SELECT habit_id FROM habit").fetchall()
         habit_id = -1
         if habit_id_list:
             habit_id = random.choice(habit_id_list)
-        return habit_id[0]
+        return str(habit_id)
 
 
 def get_user_habits(connection, user_id):
@@ -168,19 +172,6 @@ def mark_habit_as_completed(connection, habit_id):
         cur.execute("INSERT INTO progress (habit_id, status) VALUES (?,?)", (habit_id, 1))
 
 
-def mark_habit_as_completed_tests(connection, habit_id, completiondate):
-    """Utility function for tests that allows to mark a habit as completed at a specific day (random dates)"""
-    with connection:
-        cur = connection.cursor()
-        cur.execute("INSERT INTO progress (habit_id, progress_date,status) VALUES (?,?,?)",
-                    (habit_id, completiondate, 1))
-        rowcount = cur.rowcount
-        if rowcount:
-            return rowcount
-        else:
-            return -1
-
-
 def get_streak(connection, habit_id):
     """Function that allows to get the completion streak of a habit. (at the moment, only available for DAILY and ACTIVE habits)"""
     check = check_habit_progress(connection, habit_id)
@@ -188,13 +179,39 @@ def get_streak(connection, habit_id):
         connection.row_factory = lambda cursor, row: row[0]
         cur = connection.cursor()
         if check:
-            dates = cur.execute("SELECT progress_date FROM progress WHERE habit_id=(?) ORDER BY progress_date", (habit_id,)).fetchall()
+            dates = cur.execute("SELECT progress_date FROM progress WHERE habit_id=(?) ORDER BY progress_date",
+                                (habit_id,)).fetchall()
+            return dates
+        else:
+            return check
+
+
+def test_get_streak(connection, habit_id):
+    """Function that allows to get the completion streak of a habit. (at the moment, only available for DAILY and ACTIVE habits)"""
+    check = check_habit_progress(connection, habit_id)
+    with connection:
+        connection.row_factory = lambda cursor, row: row[0]
+        cur = connection.cursor()
+        if check:
+            dates = cur.execute("SELECT progress_date FROM progress WHERE habit_id=(?) ORDER BY progress_date",
+                                (habit_id,)).fetchall()
             return dates
         else:
             return check
 
 
 def check_habit_progress(connection, habit_id):
+    """Function that allows to check if the habit has any progress at all (if the habit was ever marked as completed)"""
+    with connection:
+        cur = connection.cursor()
+        check = cur.execute("SELECT COUNT(*) FROM progress WHERE habit_id=(?)", (habit_id,)).fetchone()[0]
+        if check == 1 or check > 1:
+            return 1
+        else:
+            return -1
+
+
+def test_check_habit_progress(connection, habit_id):
     """Function that allows to check if the habit has any progress at all (if the habit was ever marked as completed)"""
     with connection:
         cur = connection.cursor()
@@ -233,6 +250,18 @@ def add_predefined_habit(connection, user_id, predefined: list):
                     "VALUES (?,?,?,?,?,?)", (user_id, predefined[0], predefined[1], predefined[2], 1, predefined[3]))
 
 
+def get_habit_max_streak(dates_list: list):
+    np_dates = np.array(dates_list, dtype='datetime64[D]')
+    i0max, i1max = 0, 0
+    i0 = 0
+    for i1, date in enumerate(np_dates):
+        if date - np_dates[i0] != np.timedelta64(i1 - i0, 'D'):
+            if i1 - i0 > i1max - i0max:
+                i0max, i1max = i0, i1
+            i0 = i1
+    return np_dates[i0max:i1max]
+
+
 class Habit:
     """Habit class: this class has the purpose of creating a new habit Object by creating an instance of this class.
             Attributes:
@@ -243,6 +272,7 @@ class Habit:
                 active: Activation status of the habit.
                 habittype: type of habit (USER, PREDEFINED)
     """
+
     def __int__(self, user_id, habitname, habitdescription, periodicity, active, habittype):
         self.user_id = user_id
         self.habitname = habitname

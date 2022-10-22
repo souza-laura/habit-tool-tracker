@@ -1,4 +1,5 @@
 import sqlite3
+import inspect
 
 
 # TODO: write documentation
@@ -22,7 +23,7 @@ def initialize_database(database):
     if not exists:
         with connection:
             # Initialize database by executing all queries in this file
-            with open('../dbinitialization.txt') as initializer:
+            with open('dbinitialization.txt') as initializer:
                 for command in initializer:
                     cur.execute(command)
             initializer.close()

@@ -476,16 +476,9 @@ def show_streak(user_id):
         dates = habit.get_streak(connection, ans[0])
         if type(dates) == list and len(dates) > 1:
             # calculating max streak using np.array
-            npdates = np.array(dates, dtype='datetime64[D]')
-            i0max, i1max = 0, 0
-            i0 = 0
-            for i1, date in enumerate(npdates):
-                if date - npdates[i0] != np.timedelta64(i1 - i0, 'D'):
-                    if i1 - i0 > i1max - i0max:
-                        i0max, i1max = i0, i1
-                    i0 = i1
-            utility.show_dates_streak(npdates[i0max:i1max])
-            message = f"\nThe maximum completion streak for this habit is: {npdates[i0max:i1max].size} days! Well done!{party_popper}\n"
+            np_dates = habit.get_habit_max_streak(dates)
+            utility.show_dates_streak(np_dates)
+            message = f"\nThe maximum completion streak for this habit is: {np_dates.size} days! Well done!{party_popper}\n"
             text = Text(message)
             text.stylize("bold orange1")
             console.print(text)
