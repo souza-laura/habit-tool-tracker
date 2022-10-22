@@ -1,5 +1,4 @@
 import bcrypt
-import random
 
 
 def register(connection, firstname, lastname, username, password):
@@ -87,8 +86,6 @@ def get_user_id(connection, username):
     return uid
 
 
-
-
 def get_username(connection, user_id):
     with connection:
         cur = connection.cursor()
@@ -129,6 +126,7 @@ class User:
                 username: Username that will be used for accessing the tool.
                 password: Password that will be used for accessing the tool.
     """
+
     def __int__(self, firstname, lastname, username, password):
         self.firstname = firstname
         self.lastname = lastname

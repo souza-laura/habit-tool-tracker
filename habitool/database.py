@@ -1,5 +1,4 @@
 import sqlite3
-import inspect
 
 
 # TODO: write documentation

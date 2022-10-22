@@ -1,7 +1,7 @@
 import datetime
 import re
-import emoji
 
+import emoji
 from cfonts import render
 from rich.console import Console
 from rich.table import Table

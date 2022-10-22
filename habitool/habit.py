@@ -1,9 +1,8 @@
-from user import check_existing_uid
 import random
+
 import numpy as np
 
-
-
+from user import check_existing_uid
 
 
 def add_new_habit(connection, user_id, habit_name, habit_description, periodicity, active):

@@ -2,11 +2,12 @@ import unittest
 
 from faker import Faker
 
-from habitool import user, utility
+import test_utility
+from habitool import user
 
 fake = Faker()
 fake.name()
-connection = utility.get_connection('unittest.db')
+connection = test_utility.test_initialize_database('unittest.db')
 
 
 class UserTestCase(unittest.TestCase):
@@ -25,7 +26,7 @@ class UserTestCase(unittest.TestCase):
         self.assertEqual(uuid, -1)
 
     def test_change_username(self):
-        uuid = user.get_user_id(connection, "ruizwilliam")
+        uuid = 8
         result = user.change_username(connection, uuid, "gibsondonald", "password")
         self.assertEqual(result, -2)
         result = user.change_username(connection, uuid, fake.unique.user_name(), "drowssap")
@@ -34,7 +35,7 @@ class UserTestCase(unittest.TestCase):
         self.assertEqual(result, 1)
 
     def test_change_password(self):
-        uuid = user.get_user_id(connection, "wrobinson")
+        uuid = user.get_user_id(connection, "martinezjamie")
         result = user.change_password(connection, uuid, "repsord", "password")
         self.assertNotEqual(result, 1)
         self.assertEqual(result, -1)
@@ -43,8 +44,9 @@ class UserTestCase(unittest.TestCase):
         self.assertEqual(result, 1)
 
     def test_delete_account(self):
-        # TODO: change every time the username with an existing user
-        uuid = user.get_user_id(connection, "gjohnson")
+        username = test_utility.test_get_random_username_to_delete(connection)[0]
+        print(username)
+        uuid = user.get_user_id(connection, username)
         result = user.delete_account(connection, 0)
         self.assertEqual(result, -1)
         result = user.delete_account(connection, uuid)

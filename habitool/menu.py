@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import emoji
-import numpy as np
 import questionary
 from rich.console import Console
 from rich.text import Text
@@ -119,7 +118,8 @@ def login_form():
         if not check.__eq__(-1):
             break
         if wrong_password_counter.__eq__(3):
-            text = Text(f"\nYou digited the wrong password too many times. Try again, or re-register!{confused_emoji}\n")
+            text = Text(
+                f"\nYou digited the wrong password too many times. Try again, or re-register!{confused_emoji}\n")
             text.stylize("bold red3")
             console.print(text)
             login_form()
@@ -505,7 +505,7 @@ def show_filtered_habits(user_id, filter_value, column='periodicity'):
     elif column.__eq__('active') and filter_value.__eq__(0):
         val = 'non-active'
     habits = habit.get_filtered_habits(menu_connection, user_id, filter_value, column)
-    if type(habits) == list :
+    if type(habits) == list:
         message = "\nThese are all your " + f"{val}" + " habits: \n"
         text = Text(message)
         text.stylize("bold royal_blue1")
